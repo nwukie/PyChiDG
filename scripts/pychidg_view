@@ -1,0 +1,139 @@
+#!/usr/local/bin/python
+import argparse
+import pychidg
+import numpy as np
+
+from pyqtgraph.Qt import QtCore, QtGui
+import pyqtgraph as pg
+import pyqtgraph.opengl as gl
+
+
+# Parse Arguments
+parser = argparse.ArgumentParser(description="PyChiDG Edit")
+parser.add_argument('filename')
+arguments = parser.parse_args()
+
+
+# Create a Qt Application
+app = QtGui.QApplication([])
+
+
+
+class ChiDGWindow(gl.GLViewWidget):
+    """ An extension of a 3D window to handle selection of 
+        mesh items in the window.
+        Also modifies the orbit behavior of the view.
+    """
+    def mousePressEvent(self,ev):
+        self.mousePos = ev.pos()
+        itemsClicked = self.itemsAt((ev.pos().x(),ev.pos().y(),10,10))
+
+        # Remove all items in the ray except for ChiDGMesh items
+        for item in itemsClicked:
+            if not isinstance(item,ChiDGMesh):
+                itemsClicked.remove(item)
+
+        # Apply coloring for all ChiDGMesh items
+        if (len(itemsClicked) > 0):
+            # Color the item clicked
+            itemIndex = self.items.index(itemsClicked[0])
+            self.items[itemIndex].setColor((5.0,0.0,0.0,0.0))
+
+            # Restore other items to original color
+            for item in range(len(self.items)):
+                if not (item == itemIndex):
+                    if isinstance(self.items[item], ChiDGMesh):
+                        initialColor = self.items[item].initialColor
+                        self.items[item].setColor(initialColor)
+
+    def orbit(self, azim, elev):
+        """Orbits the camera around the center position. *azim* and *elev* are 
+           given in degrees.
+        """
+        self.opts['azimuth'] += azim
+        self.opts['elevation'] += elev
+        #self.opts['elevation'] = np.clip(self.opts['elevation'] + elev, -90, 90)
+        self.update()
+
+
+
+
+class ChiDGMesh(gl.GLMeshItem):
+    """ An extension of a mesh item so that we can store
+        an initial color. In this way, when an item becomes deselected,
+        we can reset its color to the initial value
+    """
+    def __init__(self, **kwds):
+        # Initialize base GLMeshItem class
+        super(ChiDGMesh, self).__init__(**kwds)
+
+        # Create an initial color
+        self.initialColor = self.opts['color']
+        
+    
+
+
+
+#
+# Build the application
+#
+w = ChiDGWindow()
+w.show()
+w.setWindowTitle('ChiDG Vis')
+w.setCameraPosition(distance=10)
+
+
+
+#
+# Build a reference grid plane to set things on
+#
+g = gl.GLGridItem()
+g.scale(1,1,2)
+g.rotate(90,1,0,0)
+w.addItem(g)
+
+
+
+#
+# Read grid + boundary conditions into a ChiDG environment
+#
+#sim = pychidg.type_chidg.Chidg_T()
+sim = pychidg.Sim()
+sim.init('env')
+sim.read_grid('smoothbump.h5',3)
+sim.read_boundaryconditions('smoothbump.h5')
+
+
+# Create an object for processing a ChiDG simulation environment to obtain graphics_bc's
+gather_bcs = pychidg.GatherBCS()
+gather_bcs.process(sim)
+
+
+
+
+#
+# Get renderable boundary conditions and create/add a mesh item for each one
+#
+bc = []
+mesh = []
+for ibc in range(6):
+    bc.append(gather_bcs.get_bc(ibc+1))
+
+    npoints = bc[ibc].graphics_npoints()
+    points  = bc[ibc].graphics_get_points(npoints,3)
+
+    nfaces  = bc[ibc].graphics_nfaces()
+    faces   = bc[ibc].graphics_get_faces(nfaces,3)
+
+    #mesh.append(gl.GLMeshItem(vertexes=points, faces=faces, shader='normalColor', glOptions='opaque', smooth=True))
+    #mesh.append(ChiDGMesh(vertexes=points, faces=faces, shader='normalColor', glOptions='opaque', smooth=True))
+    mesh.append(ChiDGMesh(vertexes=points, faces=faces, shader='shaded', glOptions='opaque', smooth=True))
+    w.addItem(mesh[ibc])
+
+
+
+
+if __name__=='__main__':
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()
