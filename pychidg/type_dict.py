@@ -5,7 +5,7 @@ Module type_dict
 Defined at type_dict_python.f90 lines 12-75
 
 """
-import _chidg
+import _pychidg
 import f90wrap.runtime
 import logging
 
@@ -34,7 +34,7 @@ class Dict_T(f90wrap.runtime.FortranDerivedType):
         val : float
         
         """
-        _chidg.f90wrap_get_real(self=self._handle, key=key, val=val)
+        _pychidg.f90wrap_get_real(self=self._handle, key=key, val=val)
     
     def set_real(self, key, val):
         """
@@ -50,7 +50,7 @@ class Dict_T(f90wrap.runtime.FortranDerivedType):
         val : float
         
         """
-        _chidg.f90wrap_set_real(self=self._handle, key=key, val=val)
+        _pychidg.f90wrap_set_real(self=self._handle, key=key, val=val)
     
     def get_int(self, key, val):
         """
@@ -66,7 +66,7 @@ class Dict_T(f90wrap.runtime.FortranDerivedType):
         val : int
         
         """
-        _chidg.f90wrap_get_int(self=self._handle, key=key, val=val)
+        _pychidg.f90wrap_get_int(self=self._handle, key=key, val=val)
     
     def set_int(self, key, val):
         """
@@ -82,7 +82,7 @@ class Dict_T(f90wrap.runtime.FortranDerivedType):
         val : int
         
         """
-        _chidg.f90wrap_set_int(self=self._handle, key=key, val=val)
+        _pychidg.f90wrap_set_int(self=self._handle, key=key, val=val)
     
     def __init__(self, handle=None):
         """
@@ -101,7 +101,7 @@ class Dict_T(f90wrap.runtime.FortranDerivedType):
         Automatically generated constructor for dict_t
         """
         f90wrap.runtime.FortranDerivedType.__init__(self)
-        self._handle = _chidg.f90wrap_dict_t_initialise()
+        self._handle = _pychidg.f90wrap_dict_t_initialise()
     
     def __del__(self):
         """
@@ -119,7 +119,7 @@ class Dict_T(f90wrap.runtime.FortranDerivedType):
         Automatically generated destructor for dict_t
         """
         if self._alloc:
-            _chidg.f90wrap_dict_t_finalise(this=self._handle)
+            _pychidg.f90wrap_dict_t_finalise(this=self._handle)
     
     _dt_array_initialisers = []
     

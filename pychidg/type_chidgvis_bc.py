@@ -5,7 +5,7 @@ Module type_chidgvis_bc
 Defined at type_chidgvis_bc_python.f90 lines 1-104
 
 """
-import _chidg
+import _pychidg
 import f90wrap.runtime
 import logging
 
@@ -36,7 +36,7 @@ class Chidgvis_Bc_T(f90wrap.runtime.FortranDerivedType):
         nfaces_ : int
         
         """
-        nfaces_ = _chidg.f90wrap_nfaces(self=self._handle)
+        nfaces_ = _pychidg.f90wrap_nfaces(self=self._handle)
         return nfaces_
     
     def npoints(self):
@@ -55,7 +55,7 @@ class Chidgvis_Bc_T(f90wrap.runtime.FortranDerivedType):
         npoints_ : int
         
         """
-        npoints_ = _chidg.f90wrap_npoints(self=self._handle)
+        npoints_ = _pychidg.f90wrap_npoints(self=self._handle)
         return npoints_
     
     def get_points(self, npoints, ndim):
@@ -76,7 +76,7 @@ class Chidgvis_Bc_T(f90wrap.runtime.FortranDerivedType):
         points : float array
         
         """
-        points = _chidg.f90wrap_get_points(self=self._handle, npoints=npoints, ndim=ndim)
+        points = _pychidg.f90wrap_get_points(self=self._handle, npoints=npoints, ndim=ndim)
         return points
 
     def get_faces(self, nfaces, ndim):
@@ -97,7 +97,7 @@ class Chidgvis_Bc_T(f90wrap.runtime.FortranDerivedType):
         faces : int array
         
         """
-        faces = _chidg.f90wrap_get_faces(self=self._handle, nfaces=nfaces, ndim=ndim)
+        faces = _pychidg.f90wrap_get_faces(self=self._handle, nfaces=nfaces, ndim=ndim)
         return faces
 
 
@@ -118,7 +118,7 @@ class Chidgvis_Bc_T(f90wrap.runtime.FortranDerivedType):
         Automatically generated constructor for chidgvis_bc_t
         """
         f90wrap.runtime.FortranDerivedType.__init__(self)
-        self._handle = _chidg.f90wrap_chidgvis_bc_t_initialise()
+        self._handle = _pychidg.f90wrap_chidgvis_bc_t_initialise()
     
     def __del__(self):
         """
@@ -136,7 +136,7 @@ class Chidgvis_Bc_T(f90wrap.runtime.FortranDerivedType):
         Automatically generated destructor for chidgvis_bc_t
         """
         if self._alloc:
-            _chidg.f90wrap_chidgvis_bc_t_finalise(this=self._handle)
+            _pychidg.f90wrap_chidgvis_bc_t_finalise(this=self._handle)
     
     _dt_array_initialisers = []
     

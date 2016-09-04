@@ -1,4 +1,4 @@
-import _chidg
+import _pychidg
 import f90wrap.runtime
 import logging
 from type_chidgvis_bc import Chidgvis_Bc_T as gui_bc

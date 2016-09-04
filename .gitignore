@@ -1,4 +1,9 @@
 dist
 tags
 build
-chidg.egg-info
+pychidg.egg-info
+*.swp
+*.tmp
+*.so
+*.dylib
+*.a
