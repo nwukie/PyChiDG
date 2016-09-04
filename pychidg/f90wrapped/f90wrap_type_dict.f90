@@ -1,4 +1,4 @@
-! Module type_dict defined in file type_dict_python.f90
+! Module type_dict defined in file type_dict.f90
 
 subroutine f90wrap_get_real(self, key, val)
     use type_dict, only: get_real, dict_t
@@ -86,5 +86,5 @@ subroutine f90wrap_dict_t_finalise(this)
     deallocate(this_ptr%p)
 end subroutine f90wrap_dict_t_finalise
 
-! End of module type_dict defined in file type_dict_python.f90
+! End of module type_dict defined in file type_dict.f90
 

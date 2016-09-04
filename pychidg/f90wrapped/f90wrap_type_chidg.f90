@@ -1,4 +1,4 @@
-! Module type_chidg defined in file type_chidg_python.f90
+! Module type_chidg defined in file type_chidg.f90
 
 subroutine f90wrap_init(self, level)
     use type_chidg, only: init, chidg_t
@@ -160,28 +160,6 @@ subroutine f90wrap_close(self)
     call close(self=self_ptr%p)
 end subroutine f90wrap_close
 
-!subroutine f90wrap_return_gui_bc(self, ibc_in, ret_gui_bc)
-!    use type_chidgvis_bc, only: chidgvis_bc_t
-!    use type_chidg, only: return_gui_bc, chidg_t
-!    implicit none
-!    
-!    type chidgvis_bc_t_ptr_type
-!        type(chidgvis_bc_t), pointer :: p => NULL()
-!    end type chidgvis_bc_t_ptr_type
-!    type chidg_t_ptr_type
-!        type(chidg_t), pointer :: p => NULL()
-!    end type chidg_t_ptr_type
-!    type(chidg_t_ptr_type) :: self_ptr
-!    integer, intent(in), dimension(2) :: self
-!    type(chidgvis_bc_t_ptr_type) :: ret_gui_bc_ptr
-!    integer, intent(out), dimension(2) :: ret_gui_bc
-!    integer(4), intent(in) :: ibc_in
-!    self_ptr = transfer(self, self_ptr)
-!    allocate(ret_gui_bc_ptr%p)
-!    ret_gui_bc_ptr%p = return_gui_bc(self=self_ptr%p, ibc_in=ibc_in)
-!    ret_gui_bc = transfer(ret_gui_bc_ptr, ret_gui_bc)
-!end subroutine f90wrap_return_gui_bc
-
 subroutine f90wrap_chidg_t_initialise(this)
     use type_chidg, only: chidg_t
     implicit none
@@ -208,5 +186,5 @@ subroutine f90wrap_chidg_t_finalise(this)
     deallocate(this_ptr%p)
 end subroutine f90wrap_chidg_t_finalise
 
-! End of module type_chidg defined in file type_chidg_python.f90
+! End of module type_chidg defined in file type_chidg.f90
 

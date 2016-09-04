@@ -2,13 +2,12 @@
 Module type_chidg
 
 
-Defined at type_chidg_python.f90 lines 1-330
+Defined at type_chidg.f90 lines 1-318
 
 """
 import _pychidg
 import f90wrap.runtime
 import logging
-from type_chidgvis_bc import Chidgvis_Bc_T
 
 _arrays = {}
 _objs = {}
@@ -18,7 +17,7 @@ class Chidg_T(f90wrap.runtime.FortranDerivedType):
     Type(name=chidg_t)
     
     
-    Defined at type_chidg_python.f90 lines 16-18
+    Defined at type_chidg.f90 lines 16-17
     
     """
     def init(self, level):
@@ -26,7 +25,7 @@ class Chidg_T(f90wrap.runtime.FortranDerivedType):
         init(self, level)
         
         
-        Defined at type_chidg_python.f90 lines 38-42
+        Defined at type_chidg.f90 lines 36-40
         
         Parameters
         ----------
@@ -41,7 +40,7 @@ class Chidg_T(f90wrap.runtime.FortranDerivedType):
         set(self, selector, selection, options)
         
         
-        Defined at type_chidg_python.f90 lines 65-71
+        Defined at type_chidg.f90 lines 67-73
         
         Parameters
         ----------
@@ -59,7 +58,7 @@ class Chidg_T(f90wrap.runtime.FortranDerivedType):
         read_grid(self, gridfile, spacedim)
         
         
-        Defined at type_chidg_python.f90 lines 109-114
+        Defined at type_chidg.f90 lines 94-99
         
         Parameters
         ----------
@@ -68,14 +67,15 @@ class Chidg_T(f90wrap.runtime.FortranDerivedType):
         spacedim : int
         
         """
-        _pychidg.f90wrap_read_grid(self=self._handle, gridfile=gridfile, spacedim=spacedim)
+        _pychidg.f90wrap_read_grid(self=self._handle, gridfile=gridfile, \
+            spacedim=spacedim)
     
     def read_boundaryconditions(self, gridfile):
         """
         read_boundaryconditions(self, gridfile)
         
         
-        Defined at type_chidg_python.f90 lines 136-140
+        Defined at type_chidg.f90 lines 121-125
         
         Parameters
         ----------
@@ -90,7 +90,7 @@ class Chidg_T(f90wrap.runtime.FortranDerivedType):
         read_solution(self, solutionfile)
         
         
-        Defined at type_chidg_python.f90 lines 157-161
+        Defined at type_chidg.f90 lines 148-153
         
         Parameters
         ----------
@@ -105,7 +105,7 @@ class Chidg_T(f90wrap.runtime.FortranDerivedType):
         initialize_solution_domains(self, nterms_s)
         
         
-        Defined at type_chidg_python.f90 lines 177-181
+        Defined at type_chidg.f90 lines 178-183
         
         Parameters
         ----------
@@ -113,14 +113,15 @@ class Chidg_T(f90wrap.runtime.FortranDerivedType):
         nterms_s : int
         
         """
-        _pychidg.f90wrap_initialize_solution_domains(self=self._handle, nterms_s=nterms_s)
+        _pychidg.f90wrap_initialize_solution_domains(self=self._handle, \
+            nterms_s=nterms_s)
     
     def initialize_solution_solver(self):
         """
         initialize_solution_solver(self)
         
         
-        Defined at type_chidg_python.f90 lines 198-201
+        Defined at type_chidg.f90 lines 200-204
         
         Parameters
         ----------
@@ -134,7 +135,7 @@ class Chidg_T(f90wrap.runtime.FortranDerivedType):
         write_solution(self, solutionfile)
         
         
-        Defined at type_chidg_python.f90 lines 217-222
+        Defined at type_chidg.f90 lines 231-235
         
         Parameters
         ----------
@@ -149,7 +150,7 @@ class Chidg_T(f90wrap.runtime.FortranDerivedType):
         run(self)
         
         
-        Defined at type_chidg_python.f90 lines 240-243
+        Defined at type_chidg.f90 lines 261-264
         
         Parameters
         ----------
@@ -163,7 +164,7 @@ class Chidg_T(f90wrap.runtime.FortranDerivedType):
         report(self)
         
         
-        Defined at type_chidg_python.f90 lines 264-267
+        Defined at type_chidg.f90 lines 285-288
         
         Parameters
         ----------
@@ -177,7 +178,7 @@ class Chidg_T(f90wrap.runtime.FortranDerivedType):
         close(self)
         
         
-        Defined at type_chidg_python.f90 lines 286-289
+        Defined at type_chidg.f90 lines 307-310
         
         Parameters
         ----------
@@ -186,33 +187,12 @@ class Chidg_T(f90wrap.runtime.FortranDerivedType):
         """
         _pychidg.f90wrap_close(self=self._handle)
     
-    def return_gui_bc(self, ibc_in):
-        """
-        gui_bc = return_gui_bc(self, ibc_in)
-        
-        
-        Defined at type_chidg_python.f90 lines 303-309
-        
-        Parameters
-        ----------
-        self : Chidg_T
-        ibc_in : int
-        
-        Returns
-        -------
-        gui_bc : Chidgvis_Bc_T
-        
-        """
-        gui_bc = _pychidg.f90wrap_return_gui_bc(self=self._handle, ibc_in=ibc_in)
-        gui_bc = Chidgvis_Bc_T.from_handle(gui_bc)
-        return gui_bc
-    
     def __init__(self, handle=None):
         """
         self = Chidg_T()
         
         
-        Defined at type_chidg_python.f90 lines 16-18
+        Defined at type_chidg.f90 lines 16-17
         
         
         Returns
@@ -231,7 +211,7 @@ class Chidg_T(f90wrap.runtime.FortranDerivedType):
         Destructor for class Chidg_T
         
         
-        Defined at type_chidg_python.f90 lines 16-18
+        Defined at type_chidg.f90 lines 16-17
         
         Parameters
         ----------

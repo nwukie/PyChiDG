@@ -3,10 +3,10 @@ from numpy.distutils.core import setup, Extension  # We want numpy.distutils Ext
 
 
 
-f90wrapped_files = ['pychidg/f90wrapped/f90wrap_type_chidg_python.f90',
-                    'pychidg/f90wrapped/f90wrap_type_dict_python.f90',
-                    'pychidg/f90wrapped/f90wrap_type_chidgvis_bc_python.f90',
-                    'pychidg/fortran_types/type_chidgvis_bc.f90']
+f90wrapped_files = ['pychidg/f90wrapped/f90wrap_type_chidg.f90',
+                    'pychidg/f90wrapped/f90wrap_type_dict.f90',
+                    'pychidg/f90wrapped/f90wrap_type_graphics_bc.f90',
+                    'pychidg/f90wrapped/f90wrap_type_gather_graphics_bcs.f90']
 
 
 f90wrap_interface = Extension(name='pychidg._pychidg',
