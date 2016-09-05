@@ -2,7 +2,7 @@
 Module type_graphics_bc
 
 
-Defined at type_graphics_bc.f90 lines 1-99
+Defined at type_graphics_bc.f90 lines 1-240
 
 """
 import _pychidg
@@ -101,6 +101,127 @@ class Graphics_Bc_T(f90wrap.runtime.FortranDerivedType):
         faces = _pychidg.f90wrap_graphics_get_faces(self=self._handle, nfaces=nfaces, \
             ndim=ndim)
         return faces
+    
+    def get_nproperties(self):
+        """
+        nprop = get_nproperties(self)
+        
+        
+        Defined at type_graphics_bc.f90 lines 111-116
+        
+        Parameters
+        ----------
+        self : Graphics_Bc_T
+        
+        Returns
+        -------
+        nprop : int
+        
+        """
+        nprop = _pychidg.f90wrap_get_nproperties(self=self._handle)
+        return nprop
+    
+    def get_property_name(self, iprop):
+        """
+        pname = get_property_name(self, iprop)
+        
+        
+        Defined at type_graphics_bc.f90 lines 134-140
+        
+        Parameters
+        ----------
+        self : Graphics_Bc_T
+        iprop : int
+        
+        Returns
+        -------
+        pname : str
+        
+        """
+        pname = _pychidg.f90wrap_get_property_name(self=self._handle, iprop=iprop)
+        return pname
+    
+    def get_option_key(self, iprop, ioption):
+        """
+        key = get_option_key(self, iprop, ioption)
+        
+        
+        Defined at type_graphics_bc.f90 lines 162-169
+        
+        Parameters
+        ----------
+        self : Graphics_Bc_T
+        iprop : int
+        ioption : int
+        
+        Returns
+        -------
+        key : str
+        
+        """
+        key = _pychidg.f90wrap_get_option_key(self=self._handle, iprop=iprop, \
+            ioption=ioption)
+        return key
+    
+    def get_option_value(self, iprop, key):
+        """
+        val = get_option_value(self, iprop, key)
+        
+        
+        Defined at type_graphics_bc.f90 lines 189-195
+        
+        Parameters
+        ----------
+        self : Graphics_Bc_T
+        iprop : int
+        key : str
+        
+        Returns
+        -------
+        val : float
+        
+        """
+        val = _pychidg.f90wrap_get_option_value(self=self._handle, iprop=iprop, key=key)
+        return val
+    
+    def get_noptions(self, iprop):
+        """
+        noptions = get_noptions(self, iprop)
+        
+        
+        Defined at type_graphics_bc.f90 lines 213-219
+        
+        Parameters
+        ----------
+        self : Graphics_Bc_T
+        iprop : int
+        
+        Returns
+        -------
+        noptions : int
+        
+        """
+        noptions = _pychidg.f90wrap_get_noptions(self=self._handle, iprop=iprop)
+        return noptions
+    
+    def get_name(self):
+        """
+        bcname = get_name(self)
+        
+        
+        Defined at type_graphics_bc.f90 lines 232-237
+        
+        Parameters
+        ----------
+        self : Graphics_Bc_T
+        
+        Returns
+        -------
+        bcname : str
+        
+        """
+        bcname = _pychidg.f90wrap_get_name(self=self._handle)
+        return bcname
     
     def __init__(self, handle=None):
         """

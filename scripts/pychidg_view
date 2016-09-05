@@ -1,4 +1,11 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python
+#################################################################################
+#
+#   @author Nathan A. Wukie
+#   @date   9/4/2016
+#
+#
+#################################################################################
 import argparse
 import pychidg
 import numpy as np
@@ -6,10 +13,12 @@ import numpy as np
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
+import pyqtgraph.parametertree.parameterTypes as pTypes
+from pyqtgraph.parametertree import Parameter, ParameterTree, ParameterItem, registerParameterType
 
 
 # Parse Arguments
-parser = argparse.ArgumentParser(description="PyChiDG Edit")
+parser = argparse.ArgumentParser(description="PyChiDG View")
 parser.add_argument('filename')
 arguments = parser.parse_args()
 
@@ -18,20 +27,30 @@ arguments = parser.parse_args()
 app = QtGui.QApplication([])
 
 
-
 class ChiDGWindow(gl.GLViewWidget):
     """ An extension of a 3D window to handle selection of 
         mesh items in the window.
         Also modifies the orbit behavior of the view.
     """
     def mousePressEvent(self,ev):
+        # Get items and offset the mouse position for better accuracy
         self.mousePos = ev.pos()
-        itemsClicked = self.itemsAt((ev.pos().x(),ev.pos().y(),10,10))
+        itemsClicked = self.itemsAt((ev.pos().x()-7,ev.pos().y()+6,5,5)) 
 
         # Remove all items in the ray except for ChiDGMesh items
         for item in itemsClicked:
             if not isinstance(item,ChiDGMesh):
                 itemsClicked.remove(item)
+
+
+        # Restore other items to original color
+        self.tree.clear()
+        for item in range(len(self.items)):
+        #    if not (item == itemIndex):
+                if isinstance(self.items[item], ChiDGMesh):
+                    initialColor = self.items[item].initialColor
+                    self.items[item].setColor(initialColor)
+
 
         # Apply coloring for all ChiDGMesh items
         if (len(itemsClicked) > 0):
@@ -39,12 +58,46 @@ class ChiDGWindow(gl.GLViewWidget):
             itemIndex = self.items.index(itemsClicked[0])
             self.items[itemIndex].setColor((5.0,0.0,0.0,0.0))
 
-            # Restore other items to original color
-            for item in range(len(self.items)):
-                if not (item == itemIndex):
-                    if isinstance(self.items[item], ChiDGMesh):
-                        initialColor = self.items[item].initialColor
-                        self.items[item].setColor(initialColor)
+
+            # Update the parameter tree 
+            nprop = self.bc[itemIndex].get_nproperties()
+
+
+            bc_dict = {}
+            bc_dict['name'] = self.bc[itemIndex].get_name().strip()
+            bc_dict['type'] = 'group'
+            if (nprop > 0):
+
+                prop_list = [] 
+                for iprop in range(nprop):
+                    prop_dict = {}
+                    prop_dict['name'] = w.bc[itemIndex].get_property_name(iprop+1).strip()
+                    prop_dict['type'] = 'group'
+
+                    nopts = w.bc[itemIndex].get_noptions(iprop+1)
+                    options_list = []
+                    for iopt in range(nopts):
+                        opt_key = w.bc[itemIndex].get_option_key(iprop+1,iopt+1).strip()
+                        opt_val = w.bc[itemIndex].get_option_value(iprop+1,opt_key)
+
+                        option_dict = {}
+                        option_dict['name']  = opt_key
+                        option_dict['type']  = 'float'
+                        option_dict['value'] = opt_val
+
+                        options_list.append(option_dict)
+
+                    # Finish current property dictionary and add to the list
+                    prop_dict['children'] = options_list
+                    prop_list.append(prop_dict)
+
+                bc_dict['children'] = prop_list
+                p = Parameter.create(name='params', type='group', children=[bc_dict])
+
+                self.tree.setParameters(p, showTop=False)
+
+
+
 
     def orbit(self, azim, elev):
         """Orbits the camera around the center position. *azim* and *elev* are 
@@ -73,35 +126,100 @@ class ChiDGMesh(gl.GLMeshItem):
     
 
 
+class ChiDGConsole(QtGui.QPlainTextEdit):
+    """ A console widget for displaying data to the user. Maybe status
+        messages from ChiDG if we are checking all boundary conditions
+        are set up.
+        The general format of the class here was taken from an example:
+        http://doc.qt.io/qt-5/qtserialport-terminal-console-cpp.html
+    """
+    def __init__(self, widget):
+        super(ChiDGConsole, self).__init__(widget)
+
+
+    def putData(self,data):
+        self.insertPlainText(QtCore.QString(data) + '\n')
+
+
+
+
+
 
 #
-# Build the application
+# Create a main window, 
+#   - set the central widget
+#   - set a grid layout to the central widget
+#
+main = QtGui.QMainWindow()
+win  = QtGui.QWidget()
+main.setCentralWidget(win)
+layout = QtGui.QGridLayout()
+win.setLayout(layout)
+
+
+
+#
+# Create the parameter tree
+#
+p = Parameter.create(name='params', type='group', children=[])
+tree = ParameterTree()
+
+
+#
+# Create the 3D View Window
 #
 w = ChiDGWindow()
-w.show()
 w.setWindowTitle('ChiDG Vis')
 w.setCameraPosition(distance=10)
+
+# Bring to front on startup
+w.setWindowState(w.windowState() & ~QtCore.Qt.WindowMinimized | QtCore.Qt.WindowActive)
+w.raise_()
+w.show()
+
+
+#
+# Create the Console
+#
+widget = QtGui.QWidget()
+console = ChiDGConsole(widget)
+
+
+
+#
+# Add Widgets to the layout of the central widget in the main window
+#
+layout.addWidget(w,1,0,4,3)
+layout.addWidget(tree,1,3,4,3)
+layout.addWidget(console,5,0,2,6)
+
+
+
+#
+# Call show window
+#
+main.resize(1200,600)
+main.show()
 
 
 
 #
 # Build a reference grid plane to set things on
 #
-g = gl.GLGridItem()
-g.scale(1,1,2)
-g.rotate(90,1,0,0)
-w.addItem(g)
+#g = gl.GLGridItem()
+#g.scale(1,1,2)
+#g.rotate(90,1,0,0)
+#w.addItem(g)
 
 
 
 #
 # Read grid + boundary conditions into a ChiDG environment
 #
-#sim = pychidg.type_chidg.Chidg_T()
 sim = pychidg.Sim()
 sim.init('env')
-sim.read_grid('smoothbump.h5',3)
-sim.read_boundaryconditions('smoothbump.h5')
+sim.read_grid(arguments.filename,3)
+sim.read_boundaryconditions(arguments.filename)
 
 
 # Create an object for processing a ChiDG simulation environment to obtain graphics_bc's
@@ -114,22 +232,28 @@ gather_bcs.process(sim)
 #
 # Get renderable boundary conditions and create/add a mesh item for each one
 #
-bc = []
-mesh = []
-for ibc in range(6):
-    bc.append(gather_bcs.get_bc(ibc+1))
+w.tree    = tree
+w.console = console
+w.bc   = []
+mesh   = []
 
-    npoints = bc[ibc].graphics_npoints()
-    points  = bc[ibc].graphics_get_points(npoints,3)
+nbcs = gather_bcs.nbcs()
+for ibc in range(nbcs):
+    w.bc.append(gather_bcs.get_bc(ibc+1))
 
-    nfaces  = bc[ibc].graphics_nfaces()
-    faces   = bc[ibc].graphics_get_faces(nfaces,3)
+
+
+    npoints = w.bc[ibc].graphics_npoints()
+    points  = w.bc[ibc].graphics_get_points(npoints,3)
+
+    nfaces  = w.bc[ibc].graphics_nfaces()
+    faces   = w.bc[ibc].graphics_get_faces(nfaces,3)
 
     #mesh.append(gl.GLMeshItem(vertexes=points, faces=faces, shader='normalColor', glOptions='opaque', smooth=True))
     #mesh.append(ChiDGMesh(vertexes=points, faces=faces, shader='normalColor', glOptions='opaque', smooth=True))
     mesh.append(ChiDGMesh(vertexes=points, faces=faces, shader='shaded', glOptions='opaque', smooth=True))
     w.addItem(mesh[ibc])
-
+    
 
 
 
