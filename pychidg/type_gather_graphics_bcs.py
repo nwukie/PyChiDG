@@ -21,9 +21,9 @@ class Gather_Graphics_Bcs_V(f90wrap.runtime.FortranDerivedType):
     Defined at type_gather_graphics_bcs.f90 lines 13-15
     
     """
-    def process(self, chidg):
+    def pull(self, chidg):
         """
-        process(self, chidg)
+        pull(self, chidg)
         
         
         Defined at type_gather_graphics_bcs.f90 lines 34-38
@@ -34,7 +34,24 @@ class Gather_Graphics_Bcs_V(f90wrap.runtime.FortranDerivedType):
         chidg : Chidg_T
         
         """
-        _pychidg.f90wrap_process(self=self._handle, chidg=chidg._handle)
+        _pychidg.f90wrap_pull(self=self._handle, chidg=chidg._handle)
+
+    def push(self, chidg):
+        """
+        push(self, chidg)
+        
+        
+        Defined at type_gather_graphics_bcs.f90 lines 34-38
+        
+        Parameters
+        ----------
+        self : Gather_Graphics_Bcs_V
+        chidg : Chidg_T
+        
+        """
+        _pychidg.f90wrap_push(self=self._handle, chidg=chidg._handle)
+
+
     
     def nbcs(self):
         """

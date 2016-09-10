@@ -174,6 +174,21 @@ subroutine f90wrap_get_name(ret_bcname, self)
 end subroutine f90wrap_get_name
 
 
+subroutine f90wrap_set_fcn(self, bcprop, fcn)
+    use type_graphics_bc,   only: graphics_bc_t
+    use type_bc,            only: bc_t, set_fcn
+    implicit none
+    
+    type bc_t_ptr_type
+        type(bc_t), pointer :: p => NULL()
+    end type bc_t_ptr_type
+    type(bc_t_ptr_type) :: self_ptr
+    integer, intent(in), dimension(2) :: self
+    character(*), intent(in) :: bcprop
+    character(*), intent(in) :: fcn
+    self_ptr = transfer(self, self_ptr)
+    call set_fcn(self=self_ptr%p, bcprop=bcprop, fcn=fcn)
+end subroutine f90wrap_set_fcn
 
 
 

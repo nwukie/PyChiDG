@@ -1,0 +1,378 @@
+#!/usr/bin/env python
+#################################################################################
+#
+#   A graphical application for interacting with a ChiDG file.
+#
+#   Functionality:
+#       3D model visualization
+#       Boundary condition settings
+#
+#   @author Nathan A. Wukie
+#   @date   9/4/2016
+#
+#
+#################################################################################
+import argparse
+import pychidg
+import numpy as np
+
+from pyqtgraph.Qt import QtCore, QtGui
+import pyqtgraph as pg
+import pyqtgraph.opengl as gl
+import pyqtgraph.parametertree.parameterTypes as pTypes
+from pyqtgraph.parametertree import Parameter, ParameterTree, ParameterItem, registerParameterType
+
+from OpenGL.GL import *
+from OpenGL.GLU import gluLookAt, gluUnProject
+
+# Parse Arguments
+parser = argparse.ArgumentParser(description="PyChiDG View")
+parser.add_argument('filename')
+arguments = parser.parse_args()
+
+
+# Create a Qt Application
+app = QtGui.QApplication([])
+
+
+class ChiDGWindow(gl.GLViewWidget):
+    """ 
+    author  Nathan A. Wukie
+    date    9/9/2016
+
+    An extension of a 3D window to handle selection of 
+    mesh items in the window.
+    Also modifies the orbit behavior of the view.
+    """
+    def __init__(self, **kwds):
+        # Initialize base GLMeshItem class
+        super(ChiDGWindow, self).__init__()
+
+        # Create a yaw component
+        self.opts['yaw'] = 45
+
+
+    """
+    author  Nathan A. Wukie
+    date    9/9/2016
+
+    Handle user click in 3D view window. Click over mesh instance finds the closest one and
+    activates its boundary condition in the BCMenu ParameterTree.
+    """
+    def mousePressEvent(self,ev):
+        # Get items and offset the mouse position for better accuracy
+        self.mousePos = ev.pos()
+        itemsClicked = self.itemsAt((ev.pos().x()-6,ev.pos().y()-5,5,5)) 
+
+        # Remove all items in the ray except for ChiDGMesh items
+        for item in itemsClicked:
+            if not isinstance(item,ChiDGMesh):
+                itemsClicked.remove(item)
+
+
+        # Restore all items to their original color
+        for item in range(len(self.items)):
+            if isinstance(self.items[item], ChiDGMesh):
+                initialColor = self.items[item].initialColor
+                self.items[item].setColor(initialColor)
+
+
+        if (len(itemsClicked) > 0):
+            # Clear parameter tree
+            self.tree.clear()
+
+            # Color the item clicked. Pick the first one in the list as closest
+            itemIndex = self.items.index(itemsClicked[0])
+            self.items[itemIndex].setColor((5.0,0.0,0.0,0.0))
+
+
+            # Create bc parameter group
+            bcparam = Parameter.create(name='Boundary condition', type='BCMenu')
+            bcparam.process_bc(self.bc[itemIndex])
+
+            # Update parameter tree
+            self.tree.setParameters(bcparam, showTop=False)
+
+
+
+
+    def orbit(self, azim, elev):
+        """
+        Orbits the camera around the center position. *azim* and *elev* are 
+        given in degrees.
+        """
+        self.opts['azimuth'] += azim
+        self.opts['elevation'] += elev
+        #self.opts['elevation'] = np.clip(self.opts['elevation'] + elev, -90, 90)
+        self.update()
+
+
+
+
+
+
+
+
+
+class ChiDGMesh(gl.GLMeshItem):
+    """ 
+    author  Nathan A. Wukie
+    date    9/9/2016
+
+    An extension of a mesh item so that we can store
+    an initial color. In this way, when an item becomes deselected,
+    we can reset its color to the initial value
+    """
+    def __init__(self, **kwds):
+        # Initialize base GLMeshItem class
+        super(ChiDGMesh, self).__init__(**kwds)
+
+        # Create an initial color
+        self.initialColor = self.opts['color']
+        
+    
+
+
+class ChiDGConsole(QtGui.QPlainTextEdit):
+    """ 
+    author  Nathan A. Wukie
+    date    9/9/2016
+
+    A console widget for displaying data to the user. Maybe status
+    messages from ChiDG if we are checking all boundary conditions
+    are set up.
+    The general format of the class here was taken from an example:
+    http://doc.qt.io/qt-5/qtserialport-terminal-console-cpp.html
+    """
+    def __init__(self, widget):
+        super(ChiDGConsole, self).__init__(widget)
+
+
+    def putData(self,data):
+        self.insertPlainText(QtCore.QString(data) + '\n')
+
+
+
+class ChiDGBCMenu(Parameter):
+    """
+    author  Nathan A. Wukie
+    date    9/9/2016
+
+    A Parameter tree for displaying boundary condition data and
+    handling user input/modifications to the settings.
+
+    One of these can be instantiated and initialized for each boundary
+    condition.
+    """
+    def __init__(self, **opts):
+        super(ChiDGBCMenu, self).__init__(**opts)
+    
+
+    """
+    author  Nathan A. Wukie
+    date    9/9/2016
+
+    Process a boundary condition to set up the BCMenu parameter tree based on the 
+    boundary condition parameters and options.
+    """
+    def process_bc(self,bc):
+
+        boundary_conditions_list = ['Empty', 'Euler Wall', 'Euler Total Inlet', 'Euler Pressure Outlet']
+
+        # Create Properties Parameter tree
+        self.propMenus = []
+        properties_list = []
+
+        nprop = bc.get_nproperties()
+        for iprop in range(nprop):
+            self.propMenus.append(Parameter.create(name=bc.get_property_name(iprop+1).strip(), type='PropertiesMenu'))
+
+            self.propMenus[iprop].process_bc(bc,iprop)
+            self.propMenus[iprop].setOpts(expanded=False)
+
+            properties_list.append(self.propMenus[iprop].dict())
+
+        # Initialize bc dictionary
+        bc_dict = {}
+        bc_dict['name']     = 'Boundary Condition Operator'
+        bc_dict['type']     = 'list'
+        bc_dict['values']   = boundary_conditions_list
+        bc_dict['value']    = bc.get_name()
+        bc_dict['children'] = properties_list
+
+        # Create tree
+        self.addChildren([bc_dict])
+
+
+
+class ChiDGPropertiesMenu(Parameter):
+    """
+    A Parameter tree for displaying boundary condition data and
+    handling user input/modifications to the settings.
+
+    One of these can be instantiated and initialized for each boundary
+    condition.
+    """
+    def __init__(self, **opts):
+        super(ChiDGPropertiesMenu, self).__init__(**opts)
+
+    def process_bc(self,bc,iprop):
+
+        # Create options parameter tree
+        options_list = []
+
+        # Process options
+        nopts = bc.get_noptions(iprop+1)
+        for iopt in range(nopts):
+            opt_key = bc.get_option_key(iprop+1,iopt+1).strip()
+            opt_val = bc.get_option_value(iprop+1,opt_key)
+
+            option_dict = {}
+            option_dict['name']  = opt_key
+            option_dict['type']  = 'float'
+            option_dict['value'] = opt_val
+
+            options_list.append(option_dict)
+
+        
+        prop_dict = {}
+        prop_dict['name']     = 'Function'
+        prop_dict['type']     = 'group'
+        prop_dict['children'] = options_list
+        
+        self.addChildren([prop_dict])
+
+
+
+    def dict(self):
+        dict_ = {}
+        dict_['name'] = self.name()
+        dict_['type'] = self.type()
+        dict_['children'] = self.children()
+        return dict_
+
+
+
+
+
+
+
+
+#
+# Create a main window, 
+#   - set the central widget
+#   - set a grid layout to the central widget
+#
+main = QtGui.QMainWindow()
+win  = QtGui.QWidget()
+main.setCentralWidget(win)
+layout = QtGui.QGridLayout()
+win.setLayout(layout)
+
+
+
+#
+# Register ChiDG Menu classes
+#
+registerParameterType(name='BCMenu',         cls=ChiDGBCMenu)
+registerParameterType(name='PropertiesMenu', cls=ChiDGPropertiesMenu)
+
+tree = ParameterTree()
+
+
+#
+# Create the 3D View Window
+#
+w = ChiDGWindow()
+w.setWindowTitle('ChiDG Vis')
+w.setCameraPosition(distance=10)
+
+# Bring to front on startup
+w.setWindowState(w.windowState() & ~QtCore.Qt.WindowMinimized | QtCore.Qt.WindowActive)
+w.raise_()
+w.show()
+
+
+#
+# Create the Console
+#
+widget = QtGui.QWidget()
+console = ChiDGConsole(widget)
+
+
+
+#
+# Add Widgets to the layout of the central widget in the main window
+#
+layout.addWidget(w,1,0,4,3)
+layout.addWidget(tree,1,3,4,3)
+layout.addWidget(console,5,0,2,6)
+
+
+
+#
+# Call show window
+#
+main.resize(1200,600)
+main.show()
+
+
+
+#
+# Build a reference grid plane to set things on
+#
+#g = gl.GLGridItem()
+#g.scale(1,1,2)
+#g.rotate(90,1,0,0)
+#w.addItem(g)
+
+
+
+#
+# Read grid + boundary conditions into a ChiDG environment
+#
+sim = pychidg.Sim()
+sim.init('env')
+sim.read_grid(arguments.filename,3)
+sim.read_boundaryconditions(arguments.filename)
+
+
+# Create an object for processing a ChiDG simulation environment to obtain graphics_bc's
+gather_bcs = pychidg.GatherBCS()
+gather_bcs.pull(sim)
+
+
+
+
+#
+# Get renderable boundary conditions and create/add a mesh item for each one
+#
+w.tree    = tree
+w.console = console
+w.bc   = []
+mesh   = []
+
+nbcs = gather_bcs.nbcs()
+for ibc in range(nbcs):
+    w.bc.append(gather_bcs.get_bc(ibc+1))
+
+
+
+    npoints = w.bc[ibc].graphics_npoints()
+    points  = w.bc[ibc].graphics_get_points(npoints,3)
+
+    nfaces  = w.bc[ibc].graphics_nfaces()
+    faces   = w.bc[ibc].graphics_get_faces(nfaces,3)
+
+    #mesh.append(gl.GLMeshItem(vertexes=points, faces=faces, shader='normalColor', glOptions='opaque', smooth=True))
+    #mesh.append(ChiDGMesh(vertexes=points, faces=faces, shader='normalColor', glOptions='opaque', smooth=True))
+    mesh.append(ChiDGMesh(vertexes=points, faces=faces, shader='shaded', glOptions='opaque', smooth=True))
+    w.addItem(mesh[ibc])
+    
+
+
+
+if __name__=='__main__':
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

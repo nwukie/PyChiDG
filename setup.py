@@ -32,7 +32,7 @@ setup(
       license='BSD 3-Clause',
       keywords='finite element DG galerkin chimera',
       packages=['pychidg'],
-      scripts=['scripts/pychidg_gen','scripts/pychidg_view'],
+      scripts=['scripts/pychidg_setup','scripts/pychidg'],
 #      install_requires=['f90wrap>=0.0.0'],
       ext_modules=[f90wrap_interface],
       )

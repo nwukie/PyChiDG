@@ -2,7 +2,7 @@
 Module type_graphics_bc
 
 
-Defined at type_graphics_bc.f90 lines 1-240
+Defined at type_graphics_bc.f90 lines 1-292
 
 """
 import _pychidg
@@ -222,6 +222,22 @@ class Graphics_Bc_T(f90wrap.runtime.FortranDerivedType):
         """
         bcname = _pychidg.f90wrap_get_name(self=self._handle)
         return bcname
+    
+    def set_fcn(self, bcprop, fcn):
+        """
+        set_fcn(self, bcprop, fcn)
+        
+        
+        Defined at type_graphics_bc.f90 lines 257-263
+        
+        Parameters
+        ----------
+        self : Graphics_Bc_T
+        bcprop : str
+        fcn : str
+        
+        """
+        _pychidg.f90wrap_set_fcn(self=self._handle, bcprop=bcprop, fcn=fcn)
     
     def __init__(self, handle=None):
         """

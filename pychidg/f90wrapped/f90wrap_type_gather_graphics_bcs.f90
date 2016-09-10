@@ -1,8 +1,8 @@
 ! Module type_gather_graphics_bcs defined in file type_gather_graphics_bcs.f90
 
-subroutine f90wrap_process(self, chidg)
+subroutine f90wrap_pull(self, chidg)
     use type_chidg, only: chidg_t
-    use type_gather_graphics_bcs, only: process, gather_graphics_bcs_v
+    use type_gather_graphics_bcs, only: pull, gather_graphics_bcs_v
     implicit none
     
     type gather_graphics_bcs_v_ptr_type
@@ -17,8 +17,33 @@ subroutine f90wrap_process(self, chidg)
     integer, intent(in), dimension(2) :: chidg
     self_ptr = transfer(self, self_ptr)
     chidg_ptr = transfer(chidg, chidg_ptr)
-    call process(self=self_ptr%p, chidg=chidg_ptr%p)
-end subroutine f90wrap_process
+    call pull(self=self_ptr%p, chidg=chidg_ptr%p)
+end subroutine f90wrap_pull
+
+
+
+subroutine f90wrap_push(self, chidg)
+    use type_chidg, only: chidg_t
+    use type_gather_graphics_bcs, only: push, gather_graphics_bcs_v
+    implicit none
+    
+    type gather_graphics_bcs_v_ptr_type
+        type(gather_graphics_bcs_v), pointer :: p => NULL()
+    end type gather_graphics_bcs_v_ptr_type
+    type chidg_t_ptr_type
+        type(chidg_t), pointer :: p => NULL()
+    end type chidg_t_ptr_type
+    type(gather_graphics_bcs_v_ptr_type) :: self_ptr
+    integer, intent(in), dimension(2) :: self
+    type(chidg_t_ptr_type) :: chidg_ptr
+    integer, intent(in), dimension(2) :: chidg
+    self_ptr = transfer(self, self_ptr)
+    chidg_ptr = transfer(chidg, chidg_ptr)
+    call push(self=self_ptr%p, chidg=chidg_ptr%p)
+end subroutine f90wrap_push
+
+
+
 
 subroutine f90wrap_nbcs(ret_nbcs_, self)
     use type_gather_graphics_bcs, only: gather_graphics_bcs_v, nbcs
